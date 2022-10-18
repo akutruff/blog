@@ -6,7 +6,7 @@ on:
     branches: [$default-branch]
 
 jobs:
-  tests:
+  main:
     runs-on: ubuntu-latest
 
     steps:
