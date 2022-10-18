@@ -1,4 +1,4 @@
-name: tests
+name: main
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
     branches: [$default-branch]
 
 jobs:
-  tests:
+  main:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,8 +39,8 @@ jobs:
 
   deploy:
     # Add a dependency to the build job
-    needs: tests
-    if: github.ref == 'refs/heads/master'
+    needs: main
+    if: github.ref == 'refs/heads/main'
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
       pages: write # to deploy to Pages
