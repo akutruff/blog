@@ -28,11 +28,14 @@ jobs:
 
       - name: Build
         run: pnpm run build
+      
+      - name: Export  
+        run: pnpm export && touch ./out/.nojekyll
 
       - name: Upload Demo
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ./apps/demo/build/
+          path: ./out/
 
   deploy:
     # Add a dependency to the build job
