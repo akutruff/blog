@@ -1,6 +1,6 @@
 import cn from 'classnames'
 import Link from 'next/link'
-import Image from 'next/image'
+import { Image } from '../components/Image';
 
 type Props = {
   title: string
@@ -18,6 +18,7 @@ const CoverImage = ({ title, src, slug }: Props) => {
       })}
     />
   )
+
   return (
     <div className="sm:mx-0">
       {slug ? (
