@@ -12,6 +12,7 @@ const nextConfig = {
     //     // path: `${basePath}/_next/image`,
     //     path: '',
     // }
+    assetPrefix: `${basePath}/`
 }
 
 module.exports = nextConfig
