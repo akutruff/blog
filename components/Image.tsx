@@ -7,6 +7,6 @@ export const Image = ({ src, ...props }) => {
 }
 
 export function getImagePath(src: any): string {
-    return `${process.env.NEXT_IMAGE_BASE_PATH || ''}${src}`
+    return `${process.env.NEXT_PUBLIC_IMAGE_BASE_PATH || ''}${src}`
 }
 
