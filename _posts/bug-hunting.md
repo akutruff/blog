@@ -12,6 +12,6 @@ ogImage:
 
 There are bugs everywhere.
 
-## Title
+## Finding bugs in the strangest places.
 
 I once went bug hunting.
