@@ -9,7 +9,8 @@ const nextConfig = {
     basePath,
     images: {
         loader: 'akamai',
-        path: `${basePath}/_next/image`,
+        // path: `${basePath}/_next/image`,
+        path: '',
     }
 }
 
