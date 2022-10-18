@@ -3,5 +3,5 @@ export interface ImageProps {
 }
 
 export const Image = ({ src, ...props }) => {
-    return <img src={`${process.env.NEXT_IMAGE_BASE_PATH}${src}`} {...props} />
+    return <img src={`${process.env.NEXT_IMAGE_BASE_PATH || ''}${src}`} {...props} />
 }
