@@ -30,7 +30,7 @@ jobs:
         run: pnpm run build
       
       - name: Export  
-        run: pnpm export && touch ./out/.nojekyll
+        run: pnpm export
 
       - name: Upload Demo
         uses: actions/upload-pages-artifact@v1
