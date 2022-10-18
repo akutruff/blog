@@ -7,6 +7,9 @@ const nextConfig = {
     reactStrictMode: true,
     swcMinify: true,
     basePath,
+    images: {
+        path: `${basePath}/_next/image`,
+    }
 }
 
 module.exports = nextConfig
