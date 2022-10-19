@@ -96,7 +96,8 @@ Later on, when trying to swap the stored non-canonical bump for the entangled_pa
 
 Even if that weren't the case, this signature check would ultimately fail [here](https://github.com/metaplex-foundation/metaplex-program-library/blob/20fb8a2c8bc7d2fe0a362084b93a4da12283d1cb/token-entangler/program/src/lib.rs#L226).
 
-### The fix
+## The Fix
+
 ```rust
     #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump = bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
     entangled_pair: Box<Account<'info, EntangledPair>>,    
