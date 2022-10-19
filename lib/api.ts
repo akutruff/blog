@@ -1,6 +1,11 @@
 import fs from 'fs'
 import { join } from 'path'
 import matter from 'gray-matter'
+import { parseISO, format } from 'date-fns'
+import { MDXRemoteSerializeResult, } from 'next-mdx-remote'
+import { serialize } from 'next-mdx-remote/serialize'
+import PostType from '../interfaces/post'
+import rehypeHighlight from 'rehype-highlight'
 
 const postsDirectory = join(process.cwd(), '_posts')
 
@@ -8,40 +13,34 @@ export function getPostSlugs() {
   return fs.readdirSync(postsDirectory)
 }
 
-export function getPostBySlug(slug: string, fields: string[] = []) {
-  const realSlug = slug.replace(/\.md$/, '')
-  const fullPath = join(postsDirectory, `${realSlug}.md`)
-  const fileContents = fs.readFileSync(fullPath, 'utf8')
-  const { data, content } = matter(fileContents)
+export async function getPostBySlug(slug: string) {
+  const realSlug = slug.replace(/\.mdx$/, '')
+  const fullPath = join(postsDirectory, `${realSlug}.mdx`)
+  const data = fs.readFileSync(fullPath, 'utf8')
+  // const { data, content } = matter(fileContents)
 
-  type Items = {
-    [key: string]: string
-  }
+  const source: MDXRemoteSerializeResult = await serialize(data, {
 
-  const items: Items = {}
+    // remember that YAML Front Matter from earlier?
+    // well this parameter will parse it
+    parseFrontmatter: true,
 
-  // Ensure only the minimal needed data is exposed
-  fields.forEach((field) => {
-    if (field === 'slug') {
-      items[field] = realSlug
-    }
-    if (field === 'content') {
-      items[field] = content
-    }
+    // you can pass some plugins here
+    // rehypeHighlight does code highlighting for example
+    mdxOptions: {
+      rehypePlugins: [rehypeHighlight]
+    },
+  });
 
-    if (typeof data[field] !== 'undefined') {
-      items[field] = data[field]
-    }
-  })
-
-  return items
+  return { source, post: { ...source.frontmatter, slug: realSlug } as unknown as PostType };
 }
 
-export function getAllPosts(fields: string[] = []) {
+export async function getAllPosts() {
   const slugs = getPostSlugs()
-  const posts = slugs
-    .map((slug) => getPostBySlug(slug, fields))
-    // sort posts by date in descending order
-    .sort((post1, post2) => (post1.date > post2.date ? -1 : 1))
-  return posts
+
+  const posts = await Promise.all(slugs.map(slug => getPostBySlug(slug)));
+
+  // sort posts by date in descending order
+  posts.sort((post1, post2) => (post1.post.date > post2.post.date ? -1 : 1))
+  return posts;
 }

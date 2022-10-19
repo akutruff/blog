@@ -1,28 +1,51 @@
-import { useRouter } from 'next/router'
+import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import ErrorPage from 'next/error'
-import Container from '../../components/container'
-import PostBody from '../../components/post-body'
-import Header from '../../components/header'
-import PostHeader from '../../components/post-header'
-import Layout from '../../components/layout'
-import { getPostBySlug, getAllPosts } from '../../lib/api'
-import PostTitle from '../../components/post-title'
 import Head from 'next/head'
-import markdownToHtml from '../../lib/markdownToHtml'
+import { useRouter } from 'next/router'
+import Container from '../../components/container'
+import Header from '../../components/header'
+import { getImagePath, Image } from '../../components/Image'
+import Layout from '../../components/layout'
+import PostHeader from '../../components/post-header'
+import PostTitle from '../../components/post-title'
 import type PostType from '../../interfaces/post'
-import { getImagePath } from '../../components/Image'
+import { getAllPosts, getPostBySlug } from '../../lib/api'
 
 type Props = {
   post: PostType
   morePosts: PostType[]
-  preview?: boolean
+  preview?: boolean,
+  source: MDXRemoteSerializeResult
 }
 
-export default function Post({ post, morePosts, preview }: Props) {
+const PostImage = (props) => <Image {...props} />;
+const H1 = (props) => <div className="text-6xl mt-12 mb-4 leading-snug" {...props} />;
+const H2 = (props) => <div className="text-5xl mt-12 mb-4 leading-snug" {...props} />;
+const H3 = (props) => <div className="text-4xl mt-12 mb-4 leading-snug" {...props} />;
+const H4 = (props) => <div className="text-3xl mt-12 mb-4 leading-snug" {...props} />;
+const H5 = (props) => <div className="text-2xl mt-12 mb-4 leading-snug" {...props} />;
+const H6 = (props) => <div className="text-xl mt-12 mb-4 leading-snug" {...props} />;
+const P = (props) => <p className="my-6" {...props} />;
+const Code = (props) => <pre className="my-6" {...props} />;
+
+const components = {
+  img: PostImage,
+  // code: Code,
+  // h1: H1,
+  // h2: H2,
+  // h3: H3,
+  // h4: H4,
+  // h5: H5,
+  // h6: H6,
+  // p: P,
+};
+
+export default function Post({ source, post, morePosts, preview }: Props) {
   const router = useRouter()
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
   }
+
   return (
     <Layout preview={preview}>
       <Container>
@@ -44,12 +67,15 @@ export default function Post({ post, morePosts, preview }: Props) {
                 date={post.date}
                 author={post.author}
               />
-              <PostBody content={post.content} />
+              <div className="prose max-w-2xl mx-auto">
+
+                <MDXRemote {...source} components={components} />
+              </div>
             </article>
           </>
         )}
       </Container>
-    </Layout>
+    </Layout >
   )
 }
 
@@ -59,39 +85,28 @@ type Params = {
   }
 }
 
-export async function getStaticProps({ params }: Params) {
-  const post = getPostBySlug(params.slug, [
-    'title',
-    'date',
-    'slug',
-    'author',
-    'content',
-    'ogImage',
-    'coverImage',
-  ])
-  const content = await markdownToHtml(post.content || '')
-
-  return {
-    props: {
-      post: {
-        ...post,
-        content,
-      },
-    },
-  }
-}
-
 export async function getStaticPaths() {
-  const posts = getAllPosts(['slug'])
+  const posts = await getAllPosts()
 
   return {
     paths: posts.map((post) => {
       return {
         params: {
-          slug: post.slug,
+          slug: post.post.slug,
         },
       }
     }),
     fallback: false,
   }
 }
+
+export async function getStaticProps({ params }: Params) {
+  const source = await getPostBySlug(params.slug);
+
+  // const content = await markdownToHtml(post.content || '')
+
+  return {
+    props: source,
+  }
+}
+

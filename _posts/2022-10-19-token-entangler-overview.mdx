@@ -1,0 +1,108 @@
+---
+title: 'Solana Metaplex Token Entangler Smart Contract Exploit.'
+excerpt: 'There are bugs everywhere.'
+coverImage: '/assets/blog/bugs/dall-e-computer-bug-512.png'
+date: '2022-10-19'
+author:
+  name: Andy Kutruff
+  picture: '/assets/blog/authors/invader.png'
+ogImage:
+  url: '/assets/blog/dall-e-computer-bug-512.png'
+---
+
+**TLDR;**  On June 26, 2022, I found and reported a bug in the Metaplex Token Entangler that allowed an attacker to lock-up a token permanently with a malicious token swap.  Do not pass bumps for program derived addresses as parameters in to your instructions.  
+
+This is the first in a series of Metaplex exploits I discovered.
+
+# The Token Entangler
+
+The token entangler is a Solana Program / Smart Contract that allows a person to take an NFT and swap it for another NFT issued by someone else.  Typically this can be useful for when a crypto project has issued tokens to people and the project ends up being abandoned or fails. Then, someone decides to create a project where the owners of the tokens from the failed project can exchange their tokens for a new set of tokens.
+
+See Metaplex [overview here](https://docs.metaplex.com/programs/token-entangler/overview)
+
+![image](/assets/blog/token-entangler-exploit/token-entangler-overview.png)
+
+## The Exploit
+
+Let's say a group of `A` token owners get rug-pulled and all agree to move to a new project.  Someone sets up the project, issues `B` tokens and deposits one `B` token for each `A` token in the token entangler, ready for each `A` holder to make an exchange.  However, the issuer of `B` tokens used a malicious tool for setting up the token entanglement.  People can look at the chain and see the the entanglements are totally legit looking and have no reason whatsoever to think their swaps will fail.  All the account addresses involved will be exactly as would typically be expected.  All `A` tokens can be swapped it seems, and people start swapping their tokens.  
+
+The tool was sneaky and unbeknownst to the issuer of `B`, decided to create the entanglements for 25% of the most valuable `B` tokens so that they will forever lock up the `B` token that is deposited, and prevent the holder of the corresponding `A` token from being able to swap it.  Meanwhile, the other 75% of `A` token holders are successfully swapping their `A`'s for `B`'s and selling them while the other 25% are trying to figure out why their transactions are failing.  Chaos ensues, token values drop, and faith in either token is further diminished.  
+
+This is but one way of attacking.  Use your imagination after seeing how it works.
+
+## The Security Vulnerability
+
+### CreateEntagledPair
+
+[code](https://github.com/metaplex-foundation/metaplex-program-library/blob/20fb8a2c8bc7d2fe0a362084b93a4da12283d1cb/token-entangler/program/src/lib.rs#L310)
+
+```rust
+#[derive(Accounts)]
+#[instruction(bump: u8, reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
+pub struct CreateEntangledPair<'info> {
+    //...
+    #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
+    entangled_pair: Box<Account<'info, EntangledPair>>,    
+    //...
+}
+```
+
+In the above code, the bump is passed as part of the create instruction which it seems the original author intended to be the bump for the [Program Derived Address](https://solanacookbook.com/core-concepts/pdas.html) for the `entangled_pair` account.  Unfortunately, when you look closely at the lines for the `entangled_pair` account, the constraint `bump` does not actually reference the parameter named `bump`!  Here, *bump* is telling Anchor to create the account with the canonical bump from `find_program_address`.  The `bump` *parameter* is not actually used at all and can be any number we wish.  Therein lies the attack vector where we can setup a token to be forever locked up.  
+
+The first bump argument is not actually checked as the canonical bump.  It would actually require `bump = bump` and all that is used is just bump
+The bump argument is then assigned to entangled_pair struct.
+
+From the Anchor [docs on bump checking](https://docs.rs/anchor-lang/0.24.1/anchor_lang/derive.Accounts.html), you can see the discussion of how bump is used in the case of an `init` vs. in the case of using it to simply reference an account.
+
+Also note, from the looks of it `token_a_escrow_bump`, `token_b_escrow_bump` can also be a non-canonical bumps as well.  
+
+
+The equality che:ck needed to be on there for this to verify that the correct bump was passed `bump = bump`.
+
+Now if we checkout the actual instruction [code](https://github.com/metaplex-foundation/metaplex-program-library/blob/20fb8a2c8bc7d2fe0a362084b93a4da12283d1cb/token-entangler/program/src/lib.rs#L58):
+
+```rust
+pub fn create_entangled_pair<'info>(
+      ctx: Context<'_, '_, '_, 'info, CreateEntangledPair<'info>>,
+      bump: u8,
+      _reverse_bump: u8,
+      token_a_escrow_bump: u8,
+      token_b_escrow_bump: u8,
+      price: u64,
+      pays_every_time: bool,
+  ) -> Result<()> {
+      //...
+      entangled_pair.bump = bump;
+      entangled_pair.token_a_escrow_bump = token_a_escrow_bump;
+      //...
+}        
+```
+
+Here, the `bump` parameter is assigned to the `EntangledPair` struct and stored in the account.  In doing so, we now have a bump stored in the account that does not actually match the bump used to create the address of the account.  This is usually a best practice, but only if this is the canonical bump, and here it could be any valid bump.
+
+### Swap
+[code](https://github.com/metaplex-foundation/metaplex-program-library/blob/20fb8a2c8bc7d2fe0a362084b93a4da12283d1cb/token-entangler/program/src/lib.rs#L380)
+
+```rust
+#[derive(Accounts)]
+pub struct Swap<'info> {
+    #[account(mut, seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref()], bump=entangled_pair.bump, has_one=treasury_mint)]
+}
+```
+
+In the above, the check against the account will use the invalid stored bump as a check and fail any and all swaps.
+
+Later on, when trying to swap the stored non-canonical bump for the entangled_pair is used to create a signature. This will always fail as the stored bump will not match the canonical bump in the `entangled_pair` account.
+
+Even if that weren't the case, this signature check would ultimately fail [here](https://github.com/metaplex-foundation/metaplex-program-library/blob/20fb8a2c8bc7d2fe0a362084b93a4da12283d1cb/token-entangler/program/src/lib.rs#L226).
+
+### The fix
+```rust
+    #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump = bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
+    entangled_pair: Box<Account<'info, EntangledPair>>,    
+```
+
+# Lessons: 
+
+* Never pass bumps as instruction parameters.
+* Test your code.
