@@ -36,7 +36,7 @@ const Meta = () => {
         name="description"
         content={`Blog.`}
       />
-      <meta property="og:image" content={HOME_OG_IMAGE_URL} />
+      <meta property="og:image" content={'/assets/blog/bugs/dall-e-computer-bug-512.png'} />
     </Head>
   )
 }
