@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import { HOME_OG_IMAGE_URL } from '../lib/constants'
+import { getImagePath } from './Image'
 
 const Meta = () => {
   return (
@@ -36,7 +37,7 @@ const Meta = () => {
         name="description"
         content={`Blog.`}
       />
-      <meta property="og:image" content={'/assets/blog/bugs/dall-e-computer-bug-512.png'} />
+      <meta property="og:image" content={getImagePath('/assets/blog/bugs/dall-e-computer-bug-512.png')} />
     </Head>
   )
 }
