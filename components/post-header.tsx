@@ -3,6 +3,8 @@ import DateFormatter from './date-formatter'
 import CoverImage from './cover-image'
 import PostTitle from './post-title'
 import type Author from '../interfaces/author'
+import { TwitterShareButton } from 'react-twitter-embed'
+import { useRouter } from 'next/router'
 
 type Props = {
   title: string
@@ -12,6 +14,7 @@ type Props = {
 }
 
 const PostHeader = ({ title, coverImage, date, author }: Props) => {
+  const router = useRouter()
   return (
     <>
       <PostTitle>{title}</PostTitle>
@@ -26,7 +29,10 @@ const PostHeader = ({ title, coverImage, date, author }: Props) => {
           <Avatar name={author.name} picture={author.picture} />
         </div>
         <div className="mb-6 text-lg">
-          <DateFormatter dateString={date} />
+          <div className="flex lg:flex-row lg:w-1/2 gap-5">
+            <DateFormatter dateString={date} />
+            <TwitterShareButton url={router.asPath} />
+          </div>
         </div>
       </div>
     </>

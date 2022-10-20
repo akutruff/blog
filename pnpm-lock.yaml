@@ -17,6 +17,7 @@ specifiers:
   postcss: ^8.4.14
   react: ^18.2.0
   react-dom: ^18.2.0
+  react-twitter-embed: ^4.0.4
   rehype-highlight: ^6.0.0
   remark: ^14.0.2
   remark-html: ^15.0.1
@@ -36,6 +37,7 @@ dependencies:
   next-mdx-remote: 4.1.0_biqbaboplfbrettd7655fr4n2y
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
+  react-twitter-embed: 4.0.4_biqbaboplfbrettd7655fr4n2y
   rehype-highlight: 6.0.0
   remark: 14.0.2
   remark-html: 15.0.1
@@ -1812,6 +1814,18 @@ packages:
       scheduler: 0.23.0
     dev: false
 
+  /react-twitter-embed/4.0.4_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-2JIL7qF+U62zRzpsh6SZDXNI3hRNVYf5vOZ1WRcMvwKouw+xC00PuFaD0aEp2wlyGaZ+f4x2VvX+uDadFQ3HVA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: ^16.0.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      scriptjs: 2.5.9
+    dev: false
+
   /react/18.2.0:
     resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
     engines: {node: '>=0.10.0'}
@@ -1938,6 +1952,10 @@ packages:
       '@types/json-schema': 7.0.11
       ajv: 6.12.6
       ajv-keywords: 3.5.2_ajv@6.12.6
+    dev: false
+
+  /scriptjs/2.5.9:
+    resolution: {integrity: sha512-qGVDoreyYiP1pkQnbnFAUIS5AjenNwwQBdl7zeos9etl+hYKWahjRTfzAZZYBv5xNHx7vNKCmaLDQZ6Fr2AEXg==}
     dev: false
 
   /section-matter/1.0.0:
