@@ -18,6 +18,11 @@ export default function Index({ allPosts }: Props) {
 
   return (
     <>
+      <Head>
+        <title>Andy Kutruff's Blog</title>
+        <meta property="og:title" content={`Andy Kutruff's Blog`} key="ogTitle" />
+        <meta property="og:image" content={getImagePath('/assets/blog/bugs/dall-e-computer-bug-512.png')} />
+      </Head>
       <Layout>
         <Container>
           <Intro />

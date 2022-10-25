@@ -45,13 +45,11 @@ export default function Post({ source, post, morePosts, preview }: Props) {
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
   }
-  console.log(post.ogImage.url);
+
   return (
     <>
       <Head>
-        <title>
-          {`${post.title} | Andy Kutruff's Blog`}
-        </title>
+        <title>{`${post.title} | Andy Kutruff's Blog`}</title>
         <meta property="og:title" content={`${post.title} | Andy Kutruff's Blog`} key="ogTitle" />
         <meta property="og:image" content={getImagePath(post.ogImage.url)} />
       </Head>

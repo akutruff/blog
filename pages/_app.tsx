@@ -39,11 +39,10 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <title>Andy Kutruff's Blog.</title>
         <meta name="description" content="Andy Kutruff's blog." />
         <meta property="og:type" content='website' key="ogType" />
-        <meta property="og:title" content="Andy Kutruff's blog." key="ogTitle" />
+        
         <meta property="og:description" content="Andy Kutruff's blog." key="ogDesc" />
         <meta property="twitter:card" content="summary_large_image" key="ogTwitterCard" />
-        <title>Andy Kutruff's Blog</title>
-        <meta property="og:image" content={getImagePath('/assets/blog/bugs/dall-e-computer-bug-512.png')} />
+        
       </Head>
       <Component {...pageProps} />
     </>
