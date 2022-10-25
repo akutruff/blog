@@ -1,0 +1,88 @@
+---
+title: 'Solana Metaplex Auction House Account Poisoning Exploit.'
+excerpt: 'On July 7th, 2022, I found and reported a bug in the Metaplex Auction House Program that allowed an attacker to create an unauthorized auction house for any wallet address, including existing NFT marketplaces and inject their own accounts as the withdrawal account to potentially steal fees. '
+coverImage: '/assets/blog/auction-house-creation-account-poisoning/auction-house-creation-account-poisoning-512.png'
+date: '2022-10-25'
+author:
+  name: Andy Kutruff
+  picture: '/assets/blog/authors/invader.png'
+ogImage:
+  url: '/assets/blog/auction-house-creation-account-poisoning/auction-house-creation-account-poisoning-512.png'
+---
+
+On July 7th, 2022, I found and reported a bug in the Metaplex Auction House Program that allowed an attacker to create an unauthorized auction house for any wallet address, including existing NFT marketplaces and inject their own accounts as the withdrawal account to potentially steal fees. 
+
+This is one in a series of Metaplex exploits I discovered.
+
+# The Exploit
+
+An attacker sitting at their desk runs a program that creates a new Auction House / NFT marketplace using an existing and popular NFT marketplace's authority address.  For example, the attacker could create a marketplace on behalf of a marketplace that adds support for USDC.  The attacker was not authorized to create this marketplace, and the attacker could pass his own wallet addresses as the withdrawal addresses.  If the marketplace does start accepting USDC, they may not notice that the auction house was already created.  When the marketplace attempts to do a withdrawal of their collected fees, the funds would be transferred to the attacker instead of themselves.
+
+The attacker could also create and execute auctions that a marketplace would have normally have not allowed without their consent.
+
+# The Auction House Security Vulnerability
+
+See Metaplex [overview here](https://docs.metaplex.com/programs/auction-house/overview).
+
+The Metaplex Auction house is a Solana blockchain program / smart contract that allows users to sell their NFT's via a particular *auction house.*  The program allows a seller to list their NFT for sale, and someone to buy or offer a different price for that token.  The auction house then takes a percentage of the sale.  One such auction house is OpenSea.  
+
+When creating a new auction house, the person who is starting a new marketplace runs the [`CreateAuctionHouse`](https://github.com/metaplex-foundation/metaplex-program-library/blob/615526580a0a5433099f94db638557e3cd5ef1c6/auction-house/program/src/lib.rs#L1370) instruction to configure and launch the new market with the following accounts included:
+
+```rust
+pub struct CreateAuctionHouse<'info> {    
+    pub treasury_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub authority: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub fee_withdrawal_destination: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub treasury_withdrawal_destination: UncheckedAccount<'info>,
+    pub treasury_withdrawal_destination_owner: UncheckedAccount<'info>,
+    #[account(init, seeds=[PREFIX.as_bytes(), authority.key().as_ref(), treasury_mint.key().as_ref()], bump, space=AUCTION_HOUSE_SIZE, payer=payer)]
+    pub auction_house: Account<'info, AuctionHouse>,
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=fee_payer_bump)]
+    pub auction_house_fee_account: UncheckedAccount<'info>,
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=treasury_bump)]
+    pub auction_house_treasury: UncheckedAccount<'info>,    
+    //...
+}
+```
+
+* `authority` - the wallet address of the owner and admin of the auction house.
+* `payer` - the address of the wallet thats executing the instruction.
+* `treasury_mint` - the type of currency the auction bids and sales take place in.  Usually it's SOL, but let's say for this exploit we are using USDC since the victim already has a popular SOL auction house already running.  
+* `auction_house_treasury` - The auction house treasury account is where the commissions from sales of NFTs are stored as auctions are executed.
+* `treasury_withdrawal_destination` - the wallet address of where the program will send treasury withdrawals from the `auction_house_treasury`. 
+* `auction_house_fee_account` - The auction house may sometimes pay for transactions under certain conditions.  
+* `fee_withdrawal_destination` - the wallet address of where the program will send withdrawals from the `auction_house_fee_account`.  
+
+First, if you checkout the code for [`create_auction_house`](https://github.com/metaplex-foundation/metaplex-program-library/blob/615526580a0a5433099f94db638557e3cd5ef1c6/auction-house/program/src/lib.rs#L201), you'll see that there is nothing verifying that the person executing the transaction is the `authority`!  That means anyone could create an auction house for anyone else without their consent.  This instruction is trustless.  That's the source of the vulnerability: **The program should have required that the `authority` be a signer of the transaction.**  
+
+The key way to exploit this issue are with the withdrawal destination accounts.  As the market place earns commissions and adjusts fees, they will be calling instructions to withdraw funds from the [treasury](https://github.com/metaplex-foundation/metaplex-program-library/blob/615526580a0a5433099f94db638557e3cd5ef1c6/auction-house/program/src/lib.rs#L1441) and [fee](https://github.com/metaplex-foundation/metaplex-program-library/blob/615526580a0a5433099f94db638557e3cd5ef1c6/auction-house/program/src/lib.rs#L1463) accounts.   
+
+```rust 
+#[derive(Accounts)]
+pub struct WithdrawFromTreasury<'info> {
+    pub treasury_mint: Account<'info, Mint>,
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub treasury_withdrawal_destination: UncheckedAccount<'info>,
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
+    pub auction_house_treasury: UncheckedAccount<'info>,
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), treasury_mint.key().as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=treasury_withdrawal_destination, has_one=auction_house_treasury)]
+    pub auction_house: Account<'info, AuctionHouse>,
+    //...
+}
+```
+Both the treasury and fee withdrawal instructions do the same thing - they verify that the withdrawal destination addresses are the ones that are stored on the blockchain.  The calling program simply needs to read the account values on the chain prior to calling these withdrawal instructions.  These accounts should be trusted, right?  Well, since the attacker created the auction house, they were allowed to pass any token accounts to `CreateAuctionHouse` that they desired. There was no verification of ownership or association to the actual `authority` of the auction house.
+
+The only checks against the accounts are like in the above constraint `has_one=treasury_withdrawal_destination`.  Again, all it verifies is that what was passed to `CreateAuctionHouse` what we are withdrawing to.  
+
+There's no reason why the actual authority shouldn't trust these improper accounts unless they were surprised when the went to create their own auction house for USDC, and one already existed.  My assumption: since most deployment scripts are written in an idempotent manner and check to see if work has already happened, I'm guessing there's a good chance that no one would notice.  After all, "the `authority` field has *my* address in it, and so it must be secure" which, of course, is not the case.
+
+Finally, There is one additional exploit here. Some auction houses restrict auctions from taking place in their name unless they are additional transaction signers for sale execution instructions. When the auction house was created by the attacker, they can set `requires_sign_off` to false and disable that additional signing requirement.  The attacker could then have created a bunch of simulated auctions to give legitimacy and volume to the new unauthorized USDC auction house.
+
+# Lesson
+
+* As a rule, avoid trustless instructions unless it's an important part of your design. `CreateAuctionHouse` has no reason to be trustless.  Always default to having "owners" and "admins" be signers when initializing accounts.
