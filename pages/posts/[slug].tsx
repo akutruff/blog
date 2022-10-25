@@ -10,7 +10,7 @@ import PostHeader from '../../components/post-header'
 import PostTitle from '../../components/post-title'
 import type PostType from '../../interfaces/post'
 import { getAllPosts, getPostBySlug } from '../../lib/api'
-import { getFullyQualifiedImagePath } from '../components/Image'
+import { getFullyQualifiedImagePath } from '../../components/Image'
 
 type Props = {
   post: PostType
