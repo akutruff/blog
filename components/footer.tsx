@@ -10,9 +10,9 @@ const Footer = () => {
             Trying to figure it out.
           </h3>
           <div className="flex flex-col lg:flex-row justify-center items-center lg:pl-4 lg:w-1/2">
-            <TwitterFollowButton screenName='andykutruff' options={{size : "large"}} />
+            <TwitterFollowButton screenName='andykutruff' options={{ size: "large" }} />
             <a
-              href={`https://https://github.com/akutruff/blog`}
+              href={`https://github.com/akutruff/blog`}
               className="mx-3 font-bold hover:underline"
             >
               View on GitHub
