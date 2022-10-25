@@ -45,7 +45,7 @@ export default function Post({ source, post, morePosts, preview }: Props) {
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
   }
-
+  console.log(post.ogImage.url);
   return (
     <>
       <Head>
@@ -70,7 +70,6 @@ export default function Post({ source, post, morePosts, preview }: Props) {
                   author={post.author}
                 />
                 <div className="prose max-w-2xl mx-auto">
-
                   <MDXRemote {...source} components={components} />
                 </div>
               </article>

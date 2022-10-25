@@ -6,6 +6,7 @@ import Layout from '../components/layout'
 import { getAllPosts } from '../lib/api'
 import Head from 'next/head'
 import Post from '../interfaces/post'
+import { getImagePath } from '../components/Image'
 
 type Props = {
   allPosts: Post[]
@@ -14,13 +15,10 @@ type Props = {
 export default function Index({ allPosts }: Props) {
   const heroPost = allPosts[0]
   const morePosts = allPosts.slice(1);
-  
+
   return (
     <>
       <Layout>
-        <Head>
-          <title>Andy Kutruff's Blog</title>
-        </Head>
         <Container>
           <Intro />
           {heroPost && (
