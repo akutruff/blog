@@ -5,6 +5,7 @@ import PostTitle from './post-title'
 import type Author from '../interfaces/author'
 import { TwitterShareButton } from 'react-twitter-embed'
 import { useRouter } from 'next/router'
+import { getFullyQualifiedUrl } from './Image'
 
 type Props = {
   title: string
@@ -31,7 +32,7 @@ const PostHeader = ({ title, coverImage, date, author }: Props) => {
         <div className="mb-6 text-lg">
           <div className="flex lg:flex-row lg:w-1/2 gap-5">
             <DateFormatter dateString={date} />
-            <TwitterShareButton url={router.asPath} />
+            <TwitterShareButton url={getFullyQualifiedUrl(router.asPath)} />
           </div>
         </div>
       </div>
