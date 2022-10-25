@@ -47,36 +47,39 @@ export default function Post({ source, post, morePosts, preview }: Props) {
   }
 
   return (
-    <Layout preview={preview}>
-      <Container>
-        <Header />
-        {router.isFallback ? (
-          <PostTitle>Loading…</PostTitle>
-        ) : (
-          <>
-            <article className="mb-32">
-              <Head>
-                <title>
-                  {`${post.title} | Andy Kutruff's Blog`}
-                </title>
-                <meta property="og:image" content={getImagePath(post.ogImage.url)} />
-              </Head>
-              <PostHeader
-                title={post.title}
-                coverImage={post.coverImage}
-                date={post.date}
-                author={post.author}
-              />
-              <div className="prose max-w-2xl mx-auto">
+    <>
+      <Head>
+        <title>
+          {`${post.title} | Andy Kutruff's Blog`}
+        </title>
+        <meta property="og:title" content={`${post.title} | Andy Kutruff's Blog`} key="ogTitle" />
+        <meta property="og:image" content={getImagePath(post.ogImage.url)} />
+      </Head>
+      <Layout preview={preview}>
+        <Container>
+          <Header />
+          {router.isFallback ? (
+            <PostTitle>Loading…</PostTitle>
+          ) : (
+            <>
+              <article className="mb-32">
+                <PostHeader
+                  title={post.title}
+                  coverImage={post.coverImage}
+                  date={post.date}
+                  author={post.author}
+                />
+                <div className="prose max-w-2xl mx-auto">
 
-                <MDXRemote {...source} components={components} />
-              </div>
-            </article>
-          </>
-        )}
-      </Container>
-    </Layout >
-  )
+                  <MDXRemote {...source} components={components} />
+                </div>
+              </article>
+            </>
+          )}
+        </Container>
+      </Layout >
+    </>
+  );
 }
 
 type Params = {
