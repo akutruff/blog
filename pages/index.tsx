@@ -6,7 +6,7 @@ import Layout from '../components/layout'
 import { getAllPosts } from '../lib/api'
 import Head from 'next/head'
 import Post from '../interfaces/post'
-import { getImagePath } from '../components/Image'
+import { getFullyQualifiedImagePath } from '../components/Image'
 
 type Props = {
   allPosts: Post[]
@@ -21,7 +21,7 @@ export default function Index({ allPosts }: Props) {
       <Head>
         <title>Andy Kutruff's Blog</title>
         <meta property="og:title" content={`Andy Kutruff's Blog`} key="ogTitle" />
-        <meta property="og:image" content={getImagePath('/assets/blog/bugs/dall-e-computer-bug-512.png')} />
+        <meta property="og:image" content={getFullyQualifiedImagePath('/assets/blog/bugs/dall-e-computer-bug-512.png')} />
       </Head>
       <Layout>
         <Container>

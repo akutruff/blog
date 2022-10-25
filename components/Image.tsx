@@ -10,3 +10,7 @@ export function getImagePath(src: any): string {
     return `${process.env.NEXT_PUBLIC_IMAGE_BASE_PATH || ''}${src}`
 }
 
+export function  getFullyQualifiedImagePath(src: any): string {
+    return `${process.env.NEXT_PUBLIC_SITE_DOMAIN || ''}${getImagePath(src)}`
+
+}
