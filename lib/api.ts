@@ -1,11 +1,10 @@
 import fs from 'fs'
-import { join } from 'path'
-import matter from 'gray-matter'
-import { parseISO, format } from 'date-fns'
-import { MDXRemoteSerializeResult, } from 'next-mdx-remote'
+import { MDXRemoteSerializeResult } from 'next-mdx-remote'
 import { serialize } from 'next-mdx-remote/serialize'
-import PostType from '../interfaces/post'
+import { join } from 'path'
 import rehypeHighlight from 'rehype-highlight'
+import remarkGfm from 'remark-gfm'
+import PostType from '../interfaces/post'
 
 const postsDirectory = join(process.cwd(), '_posts')
 
@@ -28,6 +27,7 @@ export async function getPostBySlug(slug: string) {
     // you can pass some plugins here
     // rehypeHighlight does code highlighting for example
     mdxOptions: {
+      remarkPlugins: [remarkGfm],
       rehypePlugins: [rehypeHighlight]
     },
   });

@@ -103,8 +103,6 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }: Params) {
   const source = await getPostBySlug(params.slug);
 
-  // const content = await markdownToHtml(post.content || '')
-
   return {
     props: source,
   }
