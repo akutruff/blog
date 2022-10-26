@@ -52,6 +52,7 @@ export default function Post({ source, post, morePosts, preview }: Props) {
         <title>{`${post.title} | Andy Kutruff's Blog`}</title>
         <meta property="og:title" content={`${post.title} | Andy Kutruff's Blog`} key="ogTitle" />
         <meta property="og:image" content={getFullyQualifiedImagePath(post.ogImage.url)} />
+        <meta name="twitter:image" content={getFullyQualifiedImagePath(post.ogImage.url)} />
       </Head>
       <Layout preview={preview}>
         <Container>
