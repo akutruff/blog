@@ -4,13 +4,12 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Container from '../../components/container'
 import Header from '../../components/header'
-import { getImagePath, Image } from '../../components/Image'
+import { getFullyQualifiedImagePath, Image } from '../../components/Image'
 import Layout from '../../components/layout'
 import PostHeader from '../../components/post-header'
 import PostTitle from '../../components/post-title'
 import type PostType from '../../interfaces/post'
 import { getAllPosts, getPostBySlug } from '../../lib/api'
-import { getFullyQualifiedUrl } from '../../components/Image'
 
 type Props = {
   post: PostType
@@ -52,7 +51,7 @@ export default function Post({ source, post, morePosts, preview }: Props) {
       <Head>
         <title>{`${post.title} | Andy Kutruff's Blog`}</title>
         <meta property="og:title" content={`${post.title} | Andy Kutruff's Blog`} key="ogTitle" />
-        <meta property="og:image" content={getFullyQualifiedUrl(post.ogImage.url)} />
+        <meta property="og:image" content={getFullyQualifiedImagePath(post.ogImage.url)} />
       </Head>
       <Layout preview={preview}>
         <Container>
