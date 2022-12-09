@@ -20,6 +20,7 @@ export default function Index({ allPosts }: Props) {
     <>
       <Head>
         <title>Andy Kutruff's Blog</title>
+        <meta name="google-site-verification" content="X-R9KmlZtCfea47k8n84CYH9gv5OxI0bHIVOYsGc9Mc" />
         <meta property="og:title" content={`Andy Kutruff's Blog`} key="ogTitle" />
         <meta property="og:image" content={getFullyQualifiedImagePath('/assets/blog/bugs/dall-e-computer-bug-512.png')} />
         <meta property="twitter:image" content={getFullyQualifiedImagePath('/assets/blog/bugs/dall-e-computer-bug-512.png')} />
